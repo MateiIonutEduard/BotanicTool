@@ -26,7 +26,6 @@ namespace BotanicTool
 
             var res = await client.GetAsync(baseUrl);
             string str = await res.Content.ReadAsStringAsync();
-
             doc.LoadHtml(str);
 
             var list = doc.DocumentNode.Descendants().Where(n => n.HasClass("left_side_item"));
@@ -74,15 +73,32 @@ namespace BotanicTool
 
             Console.Title = title;
             string data = JsonConvert.SerializeObject(plantList);
-            return data;
+            return JsonPrettify(data);
         }
 
         /// <summary>
-        /// Returns plant's description from specific url.
+        /// Returns the prettified json content.
         /// </summary>
-        /// <param name="url">Represents plant description link.</param>
+        /// <param name="json"></param>
         /// <returns></returns>
-        static async Task<Description> GetDescription(string url)
+        static string JsonPrettify(string json)
+        {
+            using (var stringReader = new StringReader(json))
+                using (var stringWriter = new StringWriter())
+                {
+                    var jsonReader = new JsonTextReader(stringReader);
+                    var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+                    jsonWriter.WriteToken(jsonReader);
+                    return stringWriter.ToString();
+                }
+        }
+
+    /// <summary>
+    /// Returns plant's description from specific url.
+    /// </summary>
+    /// <param name="url">Represents plant description link.</param>
+    /// <returns></returns>
+    static async Task<Description> GetDescription(string url)
         {
             try
             {
