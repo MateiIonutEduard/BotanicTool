@@ -7,6 +7,8 @@ using System.Configuration;
 using BotanicTool.Models;
 using HtmlAgilityPack;
 using Newtonsoft.Json;
+using System.Reflection;
+using System.Security.Policy;
 #pragma warning disable
 
 namespace BotanicTool
@@ -17,10 +19,11 @@ namespace BotanicTool
         /// Provides json content from plants description objects.
         /// </summary>
         /// <returns></returns>
-        public static async Task<string> GetItems()
+        public static async Task<string> GetItems(string path)
         {
             var doc = new HtmlDocument();
             var client = new HttpClient();
+
             var baseUrl = ConfigurationManager.AppSettings["BASE_URL"];
             var plantList = new List<Plant>();
 
@@ -30,6 +33,11 @@ namespace BotanicTool
 
             var list = doc.DocumentNode.Descendants().Where(n => n.HasClass("left_side_item"));
             var classList = new List<string>();
+
+            // get dest folder path
+            string root = Path.GetDirectoryName(path);
+            string folder = ConfigurationManager.AppSettings["FOLDER"];
+            string destFolder = Path.Combine(root, folder);
 
             // get plant categories
             foreach(var node in list)
@@ -52,22 +60,24 @@ namespace BotanicTool
                 var plantSpan = plant.Descendants().Where(n => n.HasClass("image")).FirstOrDefault();
                 var plantImage = plantSpan.ChildNodes[0].Attributes["src"].Value;
 
+                string fullPath = await DownloadImage(plantImage, destFolder);
                 string link = $"{baseUrl}{plant.ChildNodes[1].Attributes["href"].Value}";
-                var description = await GetDescription(link);
 
+                var description = await GetDescription(link, destFolder);
                 var plantName = plant.Descendants().Where(n => n.HasClass("category-name"))
                     .FirstOrDefault().InnerHtml;
 
                 var item = new Plant
                 {
                     name = plantName,
-                    imageUrl = plantImage,
+                    imageUrl = fullPath,
                     description = description,
                     category = plant.Attributes["data-category-name"].Value,
                 };
 
                 Console.Title = $"In progress... {(int)(((double)total / plants.Count()) * 100)}%";
-                if(description != null) plantList.Add(item);
+                if (description != null) plantList.Add(item);
+                else RemoveFile(plantImage, destFolder);
                 total++;
             }
 
@@ -93,12 +103,57 @@ namespace BotanicTool
                 }
         }
 
-    /// <summary>
-    /// Returns plant's description from specific url.
-    /// </summary>
-    /// <param name="url">Represents plant description link.</param>
-    /// <returns></returns>
-    static async Task<Description> GetDescription(string url)
+        /// <summary>
+        /// Download image to a specified directory.
+        /// </summary>
+        /// <param name="url"></param>
+        /// <param name="destFolder"></param>
+        /// <returns></returns>
+        static async Task<string> DownloadImage(string url, string destFolder)
+        {
+            if (!Directory.Exists(destFolder))
+                Directory.CreateDirectory(destFolder);
+
+            var tempUrl = url;
+            var baseUrl = ConfigurationManager.AppSettings["BASE_URL"];
+            if (!url.StartsWith(baseUrl)) tempUrl = $"{baseUrl}{url}";
+
+            var client = new HttpClient();
+            var res = await client.GetAsync(tempUrl);
+
+            var stream = await res.Content.ReadAsStreamAsync();
+            int index = tempUrl.LastIndexOf("/");
+
+            string fileName = tempUrl.Substring(index + 1);
+            string relFolder = ConfigurationManager.AppSettings["FOLDER"];
+
+            // save image to disk file
+            string path = Path.Combine(destFolder, fileName);
+            byte[] buffer = ((MemoryStream)stream).ToArray();
+
+            File.WriteAllBytes(path, buffer);
+            var newPath = Path.Combine(".", relFolder, fileName);
+
+            newPath = newPath.Replace('\\', '/');
+            return newPath;
+        }
+
+        static void RemoveFile(string url, string destFolder)
+        {
+            int index = url.LastIndexOf("/");
+            string fileName = url.Substring(index + 1);
+
+            string path = Path.Combine(destFolder, fileName);
+            File.Delete(path);
+        }
+
+        /// <summary>
+        /// Returns plant's description from specific url.
+        /// </summary>
+        /// <param name="url">Represents plant description link.</param>
+        /// <param name="destFolder">Represents destination folder.</param>
+        /// <returns></returns>
+        static async Task<Description> GetDescription(string url, string destFolder)
         {
             try
             {
@@ -117,16 +172,23 @@ namespace BotanicTool
                 var taxonomyDescription = doc.DocumentNode.Descendants()
                     .Where(n => n.HasClass("taxonomy-description")).FirstOrDefault();
 
+                string relativePath = await DownloadImage(image, destFolder);
+
+                if (taxonomyDescription == null)
+                {
+                    RemoveFile(image, destFolder);
+                    throw new Exception("Product item is not valid.");
+                }
 
                 var description = new Description
                 {
-                    posterImage = image,
+                    posterImage = relativePath,
                     body = taxonomyDescription.InnerHtml
                 };
 
                 return description;
             }
-            catch(Exception)
+            catch (Exception)
             { return null; }
         }
     }
