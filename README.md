@@ -1,4 +1,3 @@
 # BotanicTool
 
-Represents a Web scraper tool, that fetch the list of products from
-a specific website and builds MongoDB dataset.
+Web scraper tool that fetch list of products from specific website and builds MongoDB dataset.
