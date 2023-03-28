@@ -24,6 +24,7 @@ namespace BotanicTool
             var doc = new HtmlDocument();
             var client = new HttpClient();
 
+            var hashSet = new HashSet<string>();
             var baseUrl = ConfigurationManager.AppSettings["BASE_URL"];
             var plantList = new List<Plant>();
 
@@ -63,9 +64,18 @@ namespace BotanicTool
                 string fullPath = await DownloadImage(plantImage, destFolder);
                 string link = $"{baseUrl}{plant.ChildNodes[1].Attributes["href"].Value}";
 
+                int percent = (int)(((double)total / plants.Count()) * 100);
+                Console.Title = $"In progress... {percent}%";
+
                 var description = await GetDescription(link, destFolder);
                 var plantName = plant.Descendants().Where(n => n.HasClass("category-name"))
                     .FirstOrDefault().InnerHtml;
+
+                if (hashSet.Contains(plantName))
+                {
+                    total++;
+                    continue;
+                }
 
                 var item = new Plant
                 {
@@ -75,8 +85,11 @@ namespace BotanicTool
                     category = plant.Attributes["data-category-name"].Value,
                 };
 
-                Console.Title = $"In progress... {(int)(((double)total / plants.Count()) * 100)}%";
-                if (description != null) plantList.Add(item);
+                if (description != null)
+                {
+                    hashSet.Add(item.name);
+                    plantList.Add(item);
+                }
                 else RemoveFile(plantImage, destFolder);
                 total++;
             }
