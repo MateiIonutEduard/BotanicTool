@@ -11,7 +11,7 @@ using System.Reflection;
 using System.Security.Policy;
 #pragma warning disable
 
-namespace BotanicTool
+namespace BotanicTool.Utils
 {
     public class CoreUtil
     {
@@ -41,7 +41,7 @@ namespace BotanicTool
             string destFolder = Path.Combine(root, folder);
 
             // get plant categories
-            foreach(var node in list)
+            foreach (var node in list)
             {
                 var href = node.ChildNodes[1];
                 classList.Add(href.InnerHtml);
@@ -53,6 +53,9 @@ namespace BotanicTool
 
             string title = Console.Title;
             Console.Title = "In progress... 0%";
+
+            Console.WriteLine("Fetch Products... ");
+            ProgressBar.WriteProgress(0);
             int total = 0;
 
             // get plant description for each item from list
@@ -61,13 +64,12 @@ namespace BotanicTool
                 var plantSpan = plant.Descendants().Where(n => n.HasClass("image")).FirstOrDefault();
                 var plantImage = plantSpan.ChildNodes[0].Attributes["src"].Value;
 
-                string fullPath = await DownloadImage(plantImage, destFolder);
                 string link = $"{baseUrl}{plant.ChildNodes[1].Attributes["href"].Value}";
+                int percent = (int)((double)total / plants.Count() * 100);
 
-                int percent = (int)(((double)total / plants.Count()) * 100);
                 Console.Title = $"In progress... {percent}%";
+                ProgressBar.WriteProgress(percent, true);
 
-                var description = await GetDescription(link, destFolder);
                 var plantName = plant.Descendants().Where(n => n.HasClass("category-name"))
                     .FirstOrDefault().InnerHtml;
 
@@ -76,6 +78,9 @@ namespace BotanicTool
                     total++;
                     continue;
                 }
+
+                string fullPath = await DownloadImage(plantImage, destFolder);
+                var description = await GetDescription(link, destFolder);
 
                 var item = new Plant
                 {
@@ -95,6 +100,9 @@ namespace BotanicTool
             }
 
             Console.Title = title;
+            ProgressBar.WriteProgress(100, true);
+            Console.WriteLine("\nProduct list created successfully.");
+
             string data = JsonConvert.SerializeObject(plantList);
             return JsonPrettify(data);
         }
@@ -107,13 +115,13 @@ namespace BotanicTool
         static string JsonPrettify(string json)
         {
             using (var stringReader = new StringReader(json))
-                using (var stringWriter = new StringWriter())
-                {
-                    var jsonReader = new JsonTextReader(stringReader);
-                    var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
-                    jsonWriter.WriteToken(jsonReader);
-                    return stringWriter.ToString();
-                }
+            using (var stringWriter = new StringWriter())
+            {
+                var jsonReader = new JsonTextReader(stringReader);
+                var jsonWriter = new JsonTextWriter(stringWriter) { Formatting = Formatting.Indented };
+                jsonWriter.WriteToken(jsonReader);
+                return stringWriter.ToString();
+            }
         }
 
         /// <summary>
