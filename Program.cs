@@ -2,7 +2,6 @@
 using Newtonsoft.Json;
 using BotanicTool.Models;
 using BotanicTool.Utils;
-using BotanicTool.Data;
 
 namespace BotanicTool
 {
@@ -16,7 +15,7 @@ namespace BotanicTool
                 Environment.Exit(-1);
             }
 
-            string data = await CoreUtil.GetItems(args[0]);
+            string data = await CoreUtil.GetPlantItems(args[0]);
             await File.WriteAllTextAsync(args[0], data);
         }
     }

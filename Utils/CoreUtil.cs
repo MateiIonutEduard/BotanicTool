@@ -19,7 +19,7 @@ namespace BotanicTool.Utils
         /// Provides json content from plants description objects.
         /// </summary>
         /// <returns></returns>
-        public static async Task<string> GetItems(string path)
+        public static async Task<string> GetPlantItems(string path)
         {
             var doc = new HtmlDocument();
             var client = new HttpClient();
@@ -54,7 +54,7 @@ namespace BotanicTool.Utils
             string title = Console.Title;
             Console.Title = "In progress... 0%";
 
-            Console.WriteLine("Fetch Products... ");
+            Console.Write("Fetch Plants... ");
             ProgressBar.WriteProgress(0);
             int total = 0;
 
@@ -101,7 +101,7 @@ namespace BotanicTool.Utils
 
             Console.Title = title;
             ProgressBar.WriteProgress(100, true);
-            Console.WriteLine("\nProduct list created successfully.");
+            Console.WriteLine("\nPlant list created successfully.");
 
             string data = JsonConvert.SerializeObject(plantList);
             return JsonPrettify(data);
