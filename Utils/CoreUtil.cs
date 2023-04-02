@@ -37,7 +37,7 @@ namespace BotanicTool.Utils
 
             // get dest folder path
             string root = Path.GetDirectoryName(path);
-            string folder = ConfigurationManager.AppSettings["FOLDER"];
+            string folder = ConfigurationManager.AppSettings["PLANT_FOLDER"];
             string destFolder = Path.Combine(root, folder);
 
             // get plant categories
@@ -146,7 +146,7 @@ namespace BotanicTool.Utils
             int index = tempUrl.LastIndexOf("/");
 
             string fileName = tempUrl.Substring(index + 1);
-            string relFolder = ConfigurationManager.AppSettings["FOLDER"];
+            string relFolder = ConfigurationManager.AppSettings["PLANT_FOLDER"];
 
             // save image to disk file
             string path = Path.Combine(destFolder, fileName);
