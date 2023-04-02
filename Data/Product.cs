@@ -7,6 +7,9 @@ using System.Threading.Tasks;
 
 namespace BotanicTool.Data
 {
+    /// <summary>
+    /// Represents product object that references product sql table.
+    /// </summary>
     public class Product
     {
         public string Name { get; set; }

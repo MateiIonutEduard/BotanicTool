@@ -6,6 +6,9 @@ using System.Threading.Tasks;
 
 namespace BotanicTool.Data
 {
+    /// <summary>
+    /// Represents SQL query handler that it is saved to output file on the disk.
+    /// </summary>
     public class QueryFile
     {
         string filePath;
