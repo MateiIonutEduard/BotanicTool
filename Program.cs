@@ -2,12 +2,12 @@
 using Newtonsoft.Json;
 using BotanicTool.Models;
 using BotanicTool.Utils;
+using BotanicTool.Data;
 
 namespace BotanicTool
 {
     internal class Program
     {
-
         static async Task Main(string[] args)
         {
             if(args.Length != 1)
