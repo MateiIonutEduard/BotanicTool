@@ -11,7 +11,7 @@ namespace BotanicTool
         {
             if(args.Length != 1)
             {
-                Console.WriteLine("Specify only file destination path.");
+                Console.WriteLine("Specify only destination folder path.");
                 Environment.Exit(-1);
             }
 

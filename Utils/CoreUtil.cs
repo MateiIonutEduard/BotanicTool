@@ -108,6 +108,16 @@ namespace BotanicTool.Utils
         }
 
         /// <summary>
+        /// Creates sql query file with categories records and product list.
+        /// </summary>
+        /// <param name="path"></param>
+        /// <returns></returns>
+        public async Task<string> GetProductsAsync(string path)
+        {
+            return null;
+        }
+
+        /// <summary>
         /// Returns the prettified json content.
         /// </summary>
         /// <param name="json"></param>
