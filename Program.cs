@@ -9,14 +9,22 @@ namespace BotanicTool
     {
         static async Task Main(string[] args)
         {
-            if(args.Length != 1)
+            /*if(args.Length != 1)
             {
                 Console.WriteLine("Specify only destination folder path.");
                 Environment.Exit(-1);
-            }
+            }*/
 
-            string data = await CoreUtil.GetPlantItems(args[0]);
-            await File.WriteAllTextAsync(args[0], data);
+            // set plants file path and product sql file path
+            string plantsPath = Path.Combine("Storage", "plants.json");
+            string productsPath = Path.Combine("Storage", "products.sql");
+
+            // save plants list at specified file
+            //string data = await CoreUtil.GetPlantItems(plantsPath);
+            //await File.WriteAllTextAsync(plantsPath, data);
+
+            // save sql file that contains products and categories
+            await CoreUtil.GetProductsAsync(productsPath);
         }
     }
 }

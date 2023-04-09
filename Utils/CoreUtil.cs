@@ -9,6 +9,7 @@ using HtmlAgilityPack;
 using Newtonsoft.Json;
 using System.Reflection;
 using System.Security.Policy;
+using BotanicTool.Data;
 #pragma warning disable
 
 namespace BotanicTool.Utils
@@ -112,19 +113,41 @@ namespace BotanicTool.Utils
         /// </summary>
         /// <param name="path"></param>
         /// <returns></returns>
-        public async Task<string> GetProductsAsync(string path)
+        public static async Task GetProductsAsync(string path)
         {
             var doc = new HtmlDocument();
             var client = new HttpClient();
 
             var baseUrl = ConfigurationManager.AppSettings["BASE_URL"];
-            HashSet<string> hashSet = new HashSet<string>();
-
             HttpResponseMessage res = await client.GetAsync(baseUrl);
+
             string str = await res.Content.ReadAsStringAsync();
             doc.LoadHtml(str);
 
-            return null;
+            // find category list node
+            HtmlNode productsNode = doc.DocumentNode.Descendants()
+                .Where(n => n.HasAttributes && n.Attributes.Contains("id") && n.Attributes["id"].Value == "nav")
+                .FirstOrDefault();
+
+            // get categories for each link
+            var categoryList = productsNode.Descendants()
+                .Where(n => n.HasClass("level-top"))
+                .ToList();
+
+            List<Category> categories = new List<Category>();
+            List<string> links = new List<string>();
+
+            foreach (var category in categoryList)
+            {
+                Category model = new Category();
+                model.Name = category.InnerText;
+                string link = category.ChildNodes[0].Attributes["href"].Value;
+
+                categories.Add(model);
+                links.Add(link);
+            }
+
+            Console.WriteLine("work ok!");
         }
 
         /// <summary>
