@@ -114,6 +114,16 @@ namespace BotanicTool.Utils
         /// <returns></returns>
         public async Task<string> GetProductsAsync(string path)
         {
+            var doc = new HtmlDocument();
+            var client = new HttpClient();
+
+            var baseUrl = ConfigurationManager.AppSettings["BASE_URL"];
+            HashSet<string> hashSet = new HashSet<string>();
+
+            HttpResponseMessage res = await client.GetAsync(baseUrl);
+            string str = await res.Content.ReadAsStringAsync();
+            doc.LoadHtml(str);
+
             return null;
         }
 
