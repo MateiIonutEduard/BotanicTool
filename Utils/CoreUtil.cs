@@ -10,6 +10,7 @@ using Newtonsoft.Json;
 using System.Reflection;
 using System.Security.Policy;
 using BotanicTool.Data;
+using System.Numerics;
 #pragma warning disable
 
 namespace BotanicTool.Utils
@@ -155,7 +156,14 @@ namespace BotanicTool.Utils
                 categories.Add(model);
             }
 
-            foreach(var category in categories) 
+            string title = Console.Title;
+            Console.Title = "In progress... 0%";
+
+            Console.Write("Fetch metadata... ");
+            ProgressBar.WriteProgress(0);
+            int total = 0;
+
+            foreach (var category in categories) 
             {
                 try
                 {
@@ -168,6 +176,12 @@ namespace BotanicTool.Utils
 
                 str = await res.Content.ReadAsStringAsync();
                 doc.LoadHtml(str);
+
+                int percent = (int)((double)total / categories.Count() * 100);
+                ProgressBar.WriteProgress(percent, true);
+
+                Console.Title = $"In progress... {percent}%";
+                total++;
 
                 var productNodes = doc.DocumentNode.Descendants()
                     .Where(n => n.HasClass("product_grid_cover"))
@@ -219,8 +233,25 @@ namespace BotanicTool.Utils
             folder = ConfigurationManager.AppSettings["PRODUCT_HUGE_FOLDER"];
             destFolder = Path.Combine(path, folder);
 
+            ProgressBar.WriteProgress(100, true);
+            Console.WriteLine();
+            Console.Title = title;
+
+            title = Console.Title;
+            Console.Title = "In progress... 0%";
+
+            Console.Write("Get products... ");
+            ProgressBar.WriteProgress(0);
+            total = 0;
+
             for (int k = 0; k < products.Count; k++)
             {
+                int percent = (int)((double)total / products.Count() * 100);
+                ProgressBar.WriteProgress(percent, true);
+
+                Console.Title = $"In progress... {percent}%";
+                total++;
+
                 res = await client.GetAsync($"{products[k].Link}");
                 str = await res.Content.ReadAsStringAsync();
                 doc.LoadHtml(str);
@@ -239,18 +270,20 @@ namespace BotanicTool.Utils
                     products[k].PosterImage = $"./{folder.Replace("\\", "/")}/defaultPoster.png";
 
                 var aboutNode = doc.DocumentNode.Descendants()
-                    .FirstOrDefault(n => n.HasClass("box-description"));
+                    .FirstOrDefault(n => n.HasClass("std"));
                 
                 var techNode = doc.DocumentNode.Descendants()
                     .FirstOrDefault(n => n.HasClass("box-additional"));
 
-                if (aboutNode != null) products[k].Description = aboutNode.InnerHtml;
+                if (aboutNode != null) products[k].Description = $"<h2>Descriere Produs</h2><br/>{aboutNode.InnerHtml}";
                 if(techNode != null) products[k].TechInfo = techNode.InnerHtml;
 
                 queryFile.WriteProduct(products[k]);
             }
 
             queryFile.Close();
+            ProgressBar.WriteProgress(100, true);
+            Console.Title = title;
         }
 
         /// <summary>
