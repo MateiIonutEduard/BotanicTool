@@ -20,7 +20,7 @@ namespace BotanicTool
             //await File.WriteAllTextAsync(plantsPath, data);
 
             // save sql file that contains products and categories
-            await CoreUtil.GetProductsAsync("products.sql");
+            await CoreUtil.GetProductsAsync("C:\\Users\\eduar\\Desktop\\test");
         }
     }
 }

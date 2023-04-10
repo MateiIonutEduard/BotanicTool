@@ -28,7 +28,8 @@ namespace BotanicTool.Data
         /// <param name="product"></param>
         public void WriteRecord(Product product)
         {
-            string entry = $"('{product.Name}', '{product.Description}', '{product.TechInfo}', '{product.Price}')";
+            int available = product.IsAvailable ? 1 : 0;
+            string entry = $"('{product.Name}', '{product.Description}', '{product.LogoImage}', '{product.PosterImage}', '{product.TechInfo}', '{available}', '{product.Price}')";
             entries.Add(entry);
         }
 
@@ -37,7 +38,7 @@ namespace BotanicTool.Data
         /// </summary>
         public void Close()
         {
-            sb.Append("insert into Product(Name, Description, TechInfo, Price) values");
+            sb.Append("insert into Product(Name, Description, LogoImage, PosterImage, TechInfo, IsAvailable, Price) values");
             
             if(entries.Count > 0)
             {

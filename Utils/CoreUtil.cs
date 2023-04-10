@@ -135,9 +135,8 @@ namespace BotanicTool.Utils
                 .Where(n => n.HasClass("level-top"))
                 .ToList();
 
-            string root = Path.GetDirectoryName(path);
-            string folder = ConfigurationManager.AppSettings["PRODUCT_FOLDER"];
-            string destFolder = Path.Combine(root, folder);
+            string folder = ConfigurationManager.AppSettings["PRODUCT_SMALL_FOLDER"];
+            string destFolder = Path.Combine(path, folder);
 
             foreach (var category in categoryList)
             {
@@ -187,13 +186,14 @@ namespace BotanicTool.Utils
                     }
 
                     double? price = priceNode != null ? double.Parse(priceFormatted) : null;
-                    await DownloadImage(imageLink, destFolder);
+                    string imagePath = await DownloadImage(imageLink, destFolder, IsProduct: 1);
                     bool IsAvailable = price != null;
 
                     Product product = new Product
                     {
                         Link = url,
                         Name = productName,
+                        LogoImage = imagePath,
                         IsAvailable = IsAvailable,
                         Category = model,
                         Price = price
@@ -203,11 +203,30 @@ namespace BotanicTool.Utils
                 }
             }
 
-            for(int k = 0; k < products.Count; k++)
+            string destPath = Path.Combine(path, "products.sql");
+            var queryFile = new QueryFile(destPath);
+
+            folder = ConfigurationManager.AppSettings["PRODUCT_HUGE_FOLDER"];
+            destFolder = Path.Combine(path, folder);
+
+            for (int k = 0; k < products.Count; k++)
             {
                 res = await client.GetAsync($"{products[k].Link}");
                 str = await res.Content.ReadAsStringAsync();
                 doc.LoadHtml(str);
+
+
+                var posterImageDiv = doc.DocumentNode.Descendants()
+                    .FirstOrDefault(n => n.HasClass("product-image-zoom"));
+
+                if (posterImageDiv != null)
+                {
+                    string posterLink = posterImageDiv.ChildNodes[1].ChildNodes[1].Attributes["src"].Value;
+                    string posterImagePath = await DownloadImage(posterLink, destFolder, IsProduct: 2);
+                    products[k].PosterImage = posterImagePath;
+                }
+                else
+                    products[k].PosterImage = $"./{folder.Replace("\\", "/")}/defaultPoster.png";
 
                 var aboutNode = doc.DocumentNode.Descendants()
                     .FirstOrDefault(n => n.HasClass("box-description"));
@@ -217,7 +236,11 @@ namespace BotanicTool.Utils
 
                 if (aboutNode != null) products[k].Description = aboutNode.InnerHtml;
                 if(techNode != null) products[k].TechInfo = techNode.InnerHtml;
+
+                queryFile.WriteRecord(products[k]);
             }
+
+            queryFile.Close();
         }
 
         /// <summary>
@@ -243,7 +266,7 @@ namespace BotanicTool.Utils
         /// <param name="url"></param>
         /// <param name="destFolder"></param>
         /// <returns></returns>
-        static async Task<string> DownloadImage(string url, string destFolder)
+        static async Task<string> DownloadImage(string url, string destFolder, int IsProduct = 0)
         {
             if (!Directory.Exists(destFolder))
                 Directory.CreateDirectory(destFolder);
@@ -259,7 +282,8 @@ namespace BotanicTool.Utils
             int index = tempUrl.LastIndexOf("/");
 
             string fileName = tempUrl.Substring(index + 1);
-            string relFolder = ConfigurationManager.AppSettings["PLANT_FOLDER"];
+            string key = IsProduct == 0 ? "PLANT_FOLDER" : (IsProduct == 1 ? "PRODUCT_SMALL_FOLDER" : "PRODUCT_HUGE_FOLDER");
+            string relFolder = ConfigurationManager.AppSettings[key];
 
             // save image to disk file
             string path = Path.Combine(destFolder, fileName);
