@@ -120,6 +120,8 @@ namespace BotanicTool.Utils
 
             var baseUrl = ConfigurationManager.AppSettings["BASE_URL"];
             HttpResponseMessage res = await client.GetAsync(baseUrl);
+
+            List<Category> categories = new List<Category>();
             List<Product> products = new List<Product>();
 
             string str = await res.Content.ReadAsStringAsync();
@@ -138,15 +140,26 @@ namespace BotanicTool.Utils
             string folder = ConfigurationManager.AppSettings["PRODUCT_SMALL_FOLDER"];
             string destFolder = Path.Combine(path, folder);
 
+            string destPath = Path.Combine(path, "products.sql");
+            var queryFile = new QueryFile(destPath);
+
             foreach (var category in categoryList)
             {
                 Category model = new Category();
                 model.Name = category.InnerText;
-                string link = category.ChildNodes[0].Attributes["href"].Value;
 
+                string link = category.ChildNodes[0].Attributes["href"].Value;
+                model.Link = link;
+
+                queryFile.WriteCategory(model);
+                categories.Add(model);
+            }
+
+            foreach(var category in categories) 
+            {
                 try
                 {
-                    res = await client.GetAsync($"{baseUrl}{link}");
+                    res = await client.GetAsync($"{baseUrl}{category.Link}");
                 }
                 catch
                 {
@@ -195,16 +208,13 @@ namespace BotanicTool.Utils
                         Name = productName,
                         LogoImage = imagePath,
                         IsAvailable = IsAvailable,
-                        Category = model,
+                        Category = category,
                         Price = price
                     };
 
                     products.Add(product);
                 }
             }
-
-            string destPath = Path.Combine(path, "products.sql");
-            var queryFile = new QueryFile(destPath);
 
             folder = ConfigurationManager.AppSettings["PRODUCT_HUGE_FOLDER"];
             destFolder = Path.Combine(path, folder);
@@ -237,7 +247,7 @@ namespace BotanicTool.Utils
                 if (aboutNode != null) products[k].Description = aboutNode.InnerHtml;
                 if(techNode != null) products[k].TechInfo = techNode.InnerHtml;
 
-                queryFile.WriteRecord(products[k]);
+                queryFile.WriteProduct(products[k]);
             }
 
             queryFile.Close();
