@@ -120,6 +120,7 @@ namespace BotanicTool.Utils
 
             var baseUrl = ConfigurationManager.AppSettings["BASE_URL"];
             HttpResponseMessage res = await client.GetAsync(baseUrl);
+            List<Product> products = new List<Product>();
 
             string str = await res.Content.ReadAsStringAsync();
             doc.LoadHtml(str);
@@ -134,8 +135,9 @@ namespace BotanicTool.Utils
                 .Where(n => n.HasClass("level-top"))
                 .ToList();
 
-            List<Category> categories = new List<Category>();
-            List<string> links = new List<string>();
+            string root = Path.GetDirectoryName(path);
+            string folder = ConfigurationManager.AppSettings["PRODUCT_FOLDER"];
+            string destFolder = Path.Combine(root, folder);
 
             foreach (var category in categoryList)
             {
@@ -143,11 +145,79 @@ namespace BotanicTool.Utils
                 model.Name = category.InnerText;
                 string link = category.ChildNodes[0].Attributes["href"].Value;
 
-                categories.Add(model);
-                links.Add(link);
+                try
+                {
+                    res = await client.GetAsync($"{baseUrl}{link}");
+                }
+                catch
+                {
+                    continue;
+                }
+
+                str = await res.Content.ReadAsStringAsync();
+                doc.LoadHtml(str);
+
+                var productNodes = doc.DocumentNode.Descendants()
+                    .Where(n => n.HasClass("product_grid_cover"))
+                    .ToList();
+
+                for(int j = 0; j < productNodes.Count; j++)
+                {
+                    var imageLink = productNodes[j].ChildNodes[1]
+                        .ChildNodes[1].ChildNodes[0].Attributes["src"].Value;
+
+                    var productNameDiv = productNodes[j].Descendants()
+                        .FirstOrDefault(c => c.HasClass("product-name"));
+
+                    string url = productNameDiv.ChildNodes[0].Attributes["href"].Value;
+                    string productName = productNameDiv.ChildNodes[0].Attributes["title"].Value;
+
+
+                    var priceNode = productNodes[j].Descendants()
+                        .FirstOrDefault(n => n.HasClass("price"));
+
+                    string priceValue = priceNode != null ? priceNode.InnerText : null;
+                    string priceFormatted = string.Empty;
+
+                    if (priceValue != null)
+                    {
+                        int index = priceValue.IndexOf("L");
+                        priceFormatted = priceValue.Substring(0, index - 1)
+                            .Replace(".", "").Replace(',', '.');
+                    }
+
+                    double? price = priceNode != null ? double.Parse(priceFormatted) : null;
+                    await DownloadImage(imageLink, destFolder);
+                    bool IsAvailable = price != null;
+
+                    Product product = new Product
+                    {
+                        Link = url,
+                        Name = productName,
+                        IsAvailable = IsAvailable,
+                        Category = model,
+                        Price = price
+                    };
+
+                    products.Add(product);
+                }
             }
 
-            Console.WriteLine("work ok!");
+            for(int k = 0; k < products.Count; k++)
+            {
+                res = await client.GetAsync($"{products[k].Link}");
+                str = await res.Content.ReadAsStringAsync();
+                doc.LoadHtml(str);
+
+                var aboutNode = doc.DocumentNode.Descendants()
+                    .FirstOrDefault(n => n.HasClass("box-description"));
+                
+                var techNode = doc.DocumentNode.Descendants()
+                    .FirstOrDefault(n => n.HasClass("box-additional"));
+
+                if (aboutNode != null) products[k].Description = aboutNode.InnerHtml;
+                if(techNode != null) products[k].TechInfo = techNode.InnerHtml;
+            }
         }
 
         /// <summary>

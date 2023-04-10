@@ -12,9 +12,14 @@ namespace BotanicTool.Data
     /// </summary>
     public class Product
     {
+        public string Link { get; set; }
         public string Name { get; set; }
+
         public string Description { get; set; }
+        public Category Category { get; set; }
+
+        public bool IsAvailable { get; set; }
         public string TechInfo { get; set; }
-        public double Price { get; set; }
+        public double? Price { get; set; }
     }
 }

@@ -15,16 +15,12 @@ namespace BotanicTool
                 Environment.Exit(-1);
             }*/
 
-            // set plants file path and product sql file path
-            string plantsPath = Path.Combine("Storage", "plants.json");
-            string productsPath = Path.Combine("Storage", "products.sql");
-
             // save plants list at specified file
-            //string data = await CoreUtil.GetPlantItems(plantsPath);
+            //string data = await CoreUtil.GetPlantItems("plants.json");
             //await File.WriteAllTextAsync(plantsPath, data);
 
             // save sql file that contains products and categories
-            await CoreUtil.GetProductsAsync(productsPath);
+            await CoreUtil.GetProductsAsync("products.sql");
         }
     }
 }
