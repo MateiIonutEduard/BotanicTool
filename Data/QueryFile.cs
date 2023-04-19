@@ -41,7 +41,9 @@ namespace BotanicTool.Data
         public void WriteProduct(Product product)
         {
             int categoryId = map[product.Category.Name];
-            string entry = $"('{product.Name}', '{product.Description}', '{product.LogoImage}', '{product.PosterImage}', '{product.TechInfo}', '{product.Stock}', '{categoryId}', '{product.Price}')";
+            string description = product.Description.Replace("'", "''").Replace("\"", "''");
+            string techInfo = product.TechInfo.Replace("'", "''").Replace("\"", "''");
+            string entry = $"('{product.Name}', '{description}', '{product.LogoImage}', '{product.PosterImage}', '{techInfo}', '{product.Stock}', '{categoryId}', '{product.Price}')";
             productEntries.Add(entry);
         }
 
