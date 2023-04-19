@@ -189,44 +189,49 @@ namespace BotanicTool.Utils
 
                 for(int j = 0; j < productNodes.Count; j++)
                 {
-                    var imageLink = productNodes[j].ChildNodes[1]
-                        .ChildNodes[1].ChildNodes[0].Attributes["src"].Value;
-
-                    var productNameDiv = productNodes[j].Descendants()
-                        .FirstOrDefault(c => c.HasClass("product-name"));
-
-                    string url = productNameDiv.ChildNodes[0].Attributes["href"].Value;
-                    string productName = productNameDiv.ChildNodes[0].Attributes["title"].Value;
-
-
-                    var priceNode = productNodes[j].Descendants()
-                        .FirstOrDefault(n => n.HasClass("price"));
-
-                    string priceValue = priceNode != null ? priceNode.InnerText : null;
-                    string priceFormatted = string.Empty;
-
-                    if (priceValue != null)
+                    try
                     {
-                        int index = priceValue.IndexOf("L");
-                        priceFormatted = priceValue.Substring(0, index - 1)
-                            .Replace(".", "").Replace(',', '.');
+                        var imageLink = productNodes[j].ChildNodes[1]
+                            .ChildNodes[1].ChildNodes[0].Attributes["src"].Value;
+
+                        var productNameDiv = productNodes[j].Descendants()
+                            .FirstOrDefault(c => c.HasClass("product-name"));
+
+                        string url = productNameDiv.ChildNodes[0].Attributes["href"].Value;
+                        string productName = productNameDiv.ChildNodes[0].Attributes["title"].Value;
+
+
+                        var priceNode = productNodes[j].Descendants()
+                            .FirstOrDefault(n => n.HasClass("price"));
+
+                        string priceValue = priceNode != null ? priceNode.InnerText : null;
+                        string priceFormatted = string.Empty;
+
+                        if (priceValue != null)
+                        {
+                            int index = priceValue.IndexOf("L");
+                            priceFormatted = priceValue.Substring(0, index - 1)
+                                .Replace(".", "").Replace(',', '.');
+                        }
+
+                        double? price = priceNode != null ? double.Parse(priceFormatted) : null;
+                        string imagePath = await DownloadImage(imageLink, destFolder, IsProduct: 1);
+                        bool IsAvailable = price != null;
+
+                        Product product = new Product
+                        {
+                            Link = url,
+                            Name = productName,
+                            LogoImage = imagePath,
+                            IsAvailable = IsAvailable,
+                            Category = category,
+                            Price = price
+                        };
+
+                        products.Add(product);
                     }
-
-                    double? price = priceNode != null ? double.Parse(priceFormatted) : null;
-                    string imagePath = await DownloadImage(imageLink, destFolder, IsProduct: 1);
-                    bool IsAvailable = price != null;
-
-                    Product product = new Product
-                    {
-                        Link = url,
-                        Name = productName,
-                        LogoImage = imagePath,
-                        IsAvailable = IsAvailable,
-                        Category = category,
-                        Price = price
-                    };
-
-                    products.Add(product);
+                    catch (Exception)
+                    { }
                 }
             }
 

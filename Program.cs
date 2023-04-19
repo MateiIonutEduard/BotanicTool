@@ -39,7 +39,7 @@ namespace BotanicTool
                 Console.WriteLine("Specify only destination folder path.");
                 Environment.Exit(-1);
             }
-            
+
             // save plants list at specified file
             string plantsPath = Path.Combine(folderPath, "plants.json");
             string data = await CoreUtil.GetPlantItems(plantsPath);
