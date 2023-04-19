@@ -216,19 +216,26 @@ namespace BotanicTool.Utils
 
                         double? price = priceNode != null ? double.Parse(priceFormatted) : null;
                         string imagePath = await DownloadImage(imageLink, destFolder, IsProduct: 1);
+
+                        // simulate product stock
+                        int high = Convert.ToInt32(ConfigurationManager.AppSettings["PRODUCT_MAX_STOCK"]);
+                        Random rand = new Random(Environment.TickCount);
                         bool IsAvailable = price != null;
 
-                        Product product = new Product
+                        if (IsAvailable)
                         {
-                            Link = url,
-                            Name = productName,
-                            LogoImage = imagePath,
-                            IsAvailable = IsAvailable,
-                            Category = category,
-                            Price = price
-                        };
+                            Product product = new Product
+                            {
+                                Link = url,
+                                Name = productName,
+                                LogoImage = imagePath,
+                                Stock = rand.Next(1, high + 1),
+                                Category = category,
+                                Price = price
+                            };
 
-                        products.Add(product);
+                            products.Add(product);
+                        }
                     }
                     catch (Exception)
                     { }

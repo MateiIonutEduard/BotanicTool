@@ -40,9 +40,8 @@ namespace BotanicTool.Data
         /// <param name="product"></param>
         public void WriteProduct(Product product)
         {
-            int available = product.IsAvailable ? 1 : 0;
             int categoryId = map[product.Category.Name];
-            string entry = $"('{product.Name}', '{product.Description}', '{product.LogoImage}', '{product.PosterImage}', '{product.TechInfo}', '{available}', '{categoryId}', '{product.Price}')";
+            string entry = $"('{product.Name}', '{product.Description}', '{product.LogoImage}', '{product.PosterImage}', '{product.TechInfo}', '{product.Stock}', '{categoryId}', '{product.Price}')";
             productEntries.Add(entry);
         }
 
@@ -80,7 +79,7 @@ namespace BotanicTool.Data
 
             if(productEntries.Count > 0)
             {
-                sb.Append("insert into Product(Name, Description, LogoImage, PosterImage, TechInfo, IsAvailable, Price) values");
+                sb.Append("insert into Product(Name, Description, LogoImage, PosterImage, TechInfo, Stock, CategoryId, Price) values");
                 int n = productEntries.Count;
 
                 sb.Append($"{productEntries[0]},");

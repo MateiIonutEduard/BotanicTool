@@ -21,7 +21,7 @@ namespace BotanicTool.Data
         public string Description { get; set; }
         public Category Category { get; set; }
 
-        public bool IsAvailable { get; set; }
+        public int Stock { get; set; }
         public string TechInfo { get; set; }
         public double? Price { get; set; }
     }
