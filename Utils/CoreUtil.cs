@@ -214,16 +214,17 @@ namespace BotanicTool.Utils
                                 .Replace(".", "").Replace(',', '.');
                         }
 
-                        double? price = priceNode != null ? double.Parse(priceFormatted) : null;
-                        string imagePath = await DownloadImage(imageLink, destFolder, IsProduct: 1);
-
                         // simulate product stock
+                        double? price = priceNode != null ? double.Parse(priceFormatted) : null;
                         int high = Convert.ToInt32(ConfigurationManager.AppSettings["PRODUCT_MAX_STOCK"]);
+
                         Random rand = new Random(Environment.TickCount);
                         bool IsAvailable = price != null;
 
                         if (IsAvailable)
                         {
+                            string imagePath = await DownloadImage(imageLink, destFolder, IsProduct: 1);
+
                             Product product = new Product
                             {
                                 Link = url,
