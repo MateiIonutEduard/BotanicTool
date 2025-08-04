@@ -1,9 +1,9 @@
-# BotanicTool
+## Description
 
 Web scraper tool that fetch list of products from specific website and builds MongoDB dataset.<br/>
 This application also offers programmatically SQL script generation, alongside MongoDB <br/> dataset query file.
 
-# How to use
+## How to use
 ```shell
 BotanicTool [-o] [directory_path]
 ```
